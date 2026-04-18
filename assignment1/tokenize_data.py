@@ -1,6 +1,6 @@
 import numpy as np
 import os 
-from tokenizer import Tokenizer 
+from cs336_assignments.assignment1.tokenizer import Tokenizer 
 
 
 def tokenization(filepath, tokenizer, filename, basepath="/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/"):

@@ -2,11 +2,10 @@ import pickle
 import time 
 import resource
 
-from train_bpe_fast import train_bpe
+from cs336_assignments.assignment1.train_bpe_fast import train_bpe
 
-INPUT_PATH = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/TinyStoriesV2-GPT4-train.txt" 
-#INPUT_PATH = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/TinyStoriesV2-GPT4-valid.txt"  # use a small debug file first
-VOCAB_SIZE = 10_000
+INPUT_PATH = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/owt_train.txt" 
+VOCAB_SIZE = 32_000
 SPECIAL_TOKENS = ["<|endoftext|>"]
 OUTPUT_DIR = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/"
 
@@ -27,9 +26,9 @@ if __name__ == "__main__":
     print(f"peak memory: {peak_bytes / 1024**3:.2f} GB")
 
     # --- serialize vocab + merges ---
-    with open(OUTPUT_DIR + "tinystories_vocab.pkl", "wb") as f:
+    with open(OUTPUT_DIR + "owt_vocab.pkl", "wb") as f:
         pickle.dump(vocab, f)
-    with open(OUTPUT_DIR + "tinystories_merges.pkl", "wb") as f:
+    with open(OUTPUT_DIR + "owt_merges.pkl", "wb") as f:
         pickle.dump(merges, f)
 
     # --- longest token ---
