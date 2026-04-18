@@ -1,0 +1,2 @@
+# CS336 Assignment Implementations 
+This repository contains my implementations and explorations of core large language model (LLM) components based on Stanford CS336, with a focus on understanding design tradeoffs and practical constraints for small-scale training.
