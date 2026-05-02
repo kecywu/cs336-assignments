@@ -3,6 +3,8 @@ import numpy as np
 from cs336_basics import data_loading, rope, transformer_lm, adamw, cross_entropy, checkpointing, learning_rate_schedule, gradient_clipping
 import os
 import wandb
+import time
+import math
 
 """
 A training script that does the following:
@@ -85,6 +87,8 @@ model = transformer_lm.Transformer(
 optimizer = adamw.AdamW(model.parameters())
 
 # training loop
+start = time.time()
+
 for step in range(1, num_train_steps + 1):
     model.train()
 
@@ -100,13 +104,21 @@ for step in range(1, num_train_steps + 1):
     loss = cross_entropy.cross_entropy(predictions, target_seq)
     loss.backward()
 
-    gradient_clipping.gradient_clipping(model.parameters(), max_l2_norm)
+    gradient_clipping.gradient_clipping(list(model.parameters()), max_l2_norm)
     lr = learning_rate_schedule.learning_rate_schedule(step, max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters)
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
     optimizer.step()
 
-    wandb.log({"train/lr": lr, "train/loss": loss.item(), "step": step})
+    train_ppl = torch.exp(loss).item()
+    tokens_processed = step * batch_size * context_length
+
+    wandb.log({"train/lr": lr, 
+               "train/loss": loss.item(), 
+               "step": step,
+               "train/perplexity" : train_ppl,
+               "perf/cum_time_sec" : time.time() - start,
+               "tokens_processed" : tokens_processed})
 
     if step % eval_every == 0:
         model.eval()
@@ -126,12 +138,14 @@ for step in range(1, num_train_steps + 1):
                 val_loss += loss_val.item()
 
         avg_val_loss = val_loss / num_val_batches
+        val_ppl = math.exp(avg_val_loss)
 
-        print(f"Step [{step}/{num_train_steps}] | Train Loss: {loss.item():.4f} | Val Loss: {avg_val_loss:.4f}")
+        print(f"Step [{step}/{num_train_steps}] | Total Time: {time.time() - start}s | Train Loss: {loss.item():.4f} | Val Loss: {avg_val_loss:.4f}")
 
         wandb.log({
             "val/loss": avg_val_loss,
             "step": step,
+            "val/perplexity" : val_ppl
         })
 
     if step % checkpoint_every == 0:

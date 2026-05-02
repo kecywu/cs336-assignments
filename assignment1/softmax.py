@@ -8,3 +8,12 @@ def softmax(x, i):
     exp_x_sum = torch.sum(exp_x, dim=i, keepdim=True)
 
     return exp_x / exp_x_sum
+
+def softmax_temp_scaling(x, i, tau):
+
+    max_val, _ = torch.max(x, dim=i, keepdim=True)
+    stable_x = x - max_val
+    exp_x = torch.exp(stable_x / tau)
+    exp_x_sum = torch.sum(exp_x, dim=i, keepdim=True)
+
+    return exp_x / exp_x_sum
