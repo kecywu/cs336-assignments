@@ -9,3 +9,5 @@ def gradient_clipping(params, max_l2_norm, eps=1e-6):
         scale = max_l2_norm / (total_norm + eps)
         for g in grads:
             g *= scale
+
+    return total_norm

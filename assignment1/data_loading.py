@@ -10,8 +10,8 @@ def data_loading(x, batch_size, context_length, device):
     target = np.stack([x[i+1 : i+1+context_length] for i in start_indices])
 
     device = torch.device(device)
-    batch = torch.from_numpy(batch).to(device)
-    target = torch.from_numpy(target).to(device)
+    batch = torch.from_numpy(batch).to(device=device, dtype=torch.long)
+    target = torch.from_numpy(target).to(device=device, dtype=torch.long)
 
     return batch, target
 

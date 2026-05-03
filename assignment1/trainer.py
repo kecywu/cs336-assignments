@@ -25,11 +25,12 @@ else:
 print(f"Training on device: {device}")
 
 # Configure hyperparameters
+run_name = "test_tinystories"
 train_path = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/tinystories_token_train.npy"
 val_path = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/tinystories_token_valid.npy"
 train_dataset = np.load(train_path, mmap_mode="r")
 val_dataset = np.load(val_path, mmap_mode="r")
-out_path = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/results/"
+out_path = f"/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/results/{run_name}"
 os.makedirs(out_path, exist_ok=True)
 
 config = {
@@ -41,17 +42,24 @@ config = {
     "num_layers" : 4,
     "vocab_size" : 10000,
     "theta" : 10000,
-    "max_l2_norm" : 100, 
-    "max_learning_rate" : 0.01,
+    "max_l2_norm" : 1.0, 
+    "max_learning_rate" : 0.001,
     "min_learning_rate" : 0.0001, 
-    "warmup_iters" : 100,
-    "cosine_cycle_iters" : 900,
-    "num_train_steps" : 1000,
-    "eval_every" : 100,
-    "checkpoint_every" : 100,
-    "num_val_batches" : 10
+    "warmup_iters" : 5,
+    "cosine_cycle_iters" : 10,
+    "num_train_steps" : 10,
+    "eval_every" : 2,
+    "checkpoint_every" : 10,
+    "num_val_batches" : 2 # 100-500, Karpathy uses 200
 }
-wandb.init(project="cs336_transformer", name="run-with-tinystories", config=config)
+
+# initialize logging
+wandb.init(project="cs336-assignment1", name=run_name, config=config)
+wandb.define_metric("step")
+wandb.define_metric("train/*", step_metric="step")
+wandb.define_metric("val/*", step_metric="step")
+wandb.define_metric("perf/*", step_metric="step")
+wandb.define_metric("tokens_processed", step_metric="step")
 
 # initialize hyperparameters
 batch_size = config["batch_size"]
@@ -84,6 +92,9 @@ model = transformer_lm.Transformer(
     pos_encoder,
     device=device,
 )
+# speed up training on mps
+# if device.type == "mps":
+#     model = torch.compile(model, backend="aot_eager")
 optimizer = adamw.AdamW(model.parameters())
 
 # training loop
@@ -100,11 +111,16 @@ for step in range(1, num_train_steps + 1):
     )
 
     optimizer.zero_grad()
+    """
+    with torch.autocast(device_type=device.type, dtype=torch.bfloat16):
+      predictions = model(input_seq)
+      loss = cross_entropy.cross_entropy(predictions, target_seq)
+    """
     predictions = model(input_seq)
     loss = cross_entropy.cross_entropy(predictions, target_seq)
     loss.backward()
 
-    gradient_clipping.gradient_clipping(list(model.parameters()), max_l2_norm)
+    grad_norm = gradient_clipping.gradient_clipping(list(model.parameters()), max_l2_norm)
     lr = learning_rate_schedule.learning_rate_schedule(step, max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters)
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
@@ -115,6 +131,7 @@ for step in range(1, num_train_steps + 1):
 
     wandb.log({"train/lr": lr, 
                "train/loss": loss.item(), 
+               "train/grad_norm": grad_norm.item(),
                "step": step,
                "train/perplexity" : train_ppl,
                "perf/cum_time_sec" : time.time() - start,
@@ -132,6 +149,12 @@ for step in range(1, num_train_steps + 1):
                     context_length,
                     device,
                 )
+
+                """
+                with torch.autocast(device_type=device.type, dtype=torch.bfloat16):
+                    val_predictions = model(val_input)
+                    loss_val = cross_entropy.cross_entropy(val_predictions, val_target)
+                """
 
                 val_predictions = model(val_input)
                 loss_val = cross_entropy.cross_entropy(val_predictions, val_target)

@@ -26,7 +26,7 @@ class Transformer(nn.Module):
         )
 
         self.rms = RMSNorm(d_model, device=device, dtype=dtype)
-        self.linear = Linear(d_model, vocab_size)
+        self.linear = Linear(d_model, vocab_size, device=device, dtype=dtype)
 
 
     def forward(self, x):
