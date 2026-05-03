@@ -26,7 +26,7 @@ print(f"Training on device: {device}")
 
 total_tokens = 4_096_000
 total_val_tokens = 163_840
-batch_sizes = [1, 4, 16, 32, 64, 128]
+batch_sizes = [4, 16, 32, 64, 128]
 
 for batch_size in batch_sizes: 
 
@@ -39,9 +39,10 @@ for batch_size in batch_sizes:
     out_path = f"/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/results/{run_name}"
     os.makedirs(out_path, exist_ok=True)
 
+    context_length = 256
     config = {
         "batch_size" : batch_size, 
-        "context_length" : 256,
+        "context_length" : context_length,
         "d_model" : 512,
         "d_ff" : 1344,
         "num_heads" : 16, 
@@ -49,10 +50,10 @@ for batch_size in batch_sizes:
         "vocab_size" : 10000,
         "theta" : 10000,
         "max_l2_norm" : 1.0, 
-        "max_learning_rate" : 3e-4,
-        "min_learning_rate" : 3e-5, 
+        "max_learning_rate" : 1e-3,
+        "min_learning_rate" : 1e-4, 
         "warmup_iters" : int(0.05 * total_tokens // (batch_size * context_length)),
-        "cosine_cycle_iters" : total_tokens // (batch_size * context_length),
+        "cosine_cycle_iters" : total_tokens // (batch_size * context_length), 
         "num_train_steps" : total_tokens // (batch_size * context_length),
         "eval_every" : total_tokens // (batch_size * context_length),
         "checkpoint_every" : total_tokens // (batch_size * context_length),
@@ -65,7 +66,6 @@ for batch_size in batch_sizes:
     wandb.define_metric("train/*", step_metric="tokens_processed")
     wandb.define_metric("val/*", step_metric="tokens_processed")
     wandb.define_metric("perf/*", step_metric="tokens_processed")
-    wandb.define_metric("tokens_processed", step_metric="tokens_processed")
 
     # initialize hyperparameters
     batch_size = config["batch_size"]

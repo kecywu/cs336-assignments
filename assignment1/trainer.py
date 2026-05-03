@@ -25,7 +25,7 @@ else:
 print(f"Training on device: {device}")
 
 # Configure hyperparameters
-run_name = "test_tinystories"
+run_name = "tinystories"
 train_path = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/tinystories_token_train.npy"
 val_path = "/Users/liukunwu/Documents/GitHub/cs336_assignments/assignment1-basics/data/tinystories_token_valid.npy"
 train_dataset = np.load(train_path, mmap_mode="r")
@@ -43,14 +43,14 @@ config = {
     "vocab_size" : 10000,
     "theta" : 10000,
     "max_l2_norm" : 1.0, 
-    "max_learning_rate" : 0.001,
-    "min_learning_rate" : 0.0001, 
-    "warmup_iters" : 5,
-    "cosine_cycle_iters" : 10,
-    "num_train_steps" : 10,
-    "eval_every" : 2,
-    "checkpoint_every" : 10,
-    "num_val_batches" : 2 # 100-500, Karpathy uses 200
+    "max_learning_rate" : 1e-3,
+    "min_learning_rate" : 1e-4, 
+    "warmup_iters" : 250,
+    "cosine_cycle_iters" : 5000,
+    "num_train_steps" : 5000,
+    "eval_every" : 500,
+    "checkpoint_every" : 5000,
+    "num_val_batches" : 50 # 100-500, Karpathy uses 200
 }
 
 # initialize logging
@@ -93,8 +93,8 @@ model = transformer_lm.Transformer(
     device=device,
 )
 # speed up training on mps
-# if device.type == "mps":
-#     model = torch.compile(model, backend="aot_eager")
+if device.type == "mps":
+     model = torch.compile(model, backend="aot_eager")
 optimizer = adamw.AdamW(model.parameters())
 
 # training loop
