@@ -8,7 +8,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
     scores = Q @ K.transpose(-2, -1) / (d_k ** 0.5)
     
     if mask is not None:
-        scores = scores.masked_fill(mask == False, float("-inf"))
+        scores = scores.masked_fill(~mask, float("-inf"))
     
     attn = softmax(scores, -1)
 
