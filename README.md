@@ -3,7 +3,7 @@ This repository contains my implementations and explorations of core large langu
 
 Assignment 1: completed 05/03, validation loss 3.56 on 60 minutes of H100 hours.
 
-Assignment 4:
+Assignment 4: completed 05/14
 
 Assignment 5:
 
