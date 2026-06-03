@@ -3,7 +3,7 @@ import re
 def parse_mmlu_response(model_output):
 
     prefix = "The correct answer is"
-    pattern = rf"{re.escape(prefix)}\s*[:\s]*\s*([A-D])(?:\b|\.|\s|$)"
+    pattern = rf"{re.escape(prefix)}\s*[:\s]*\s*\(?([A-D])\)?(?:\b|\.|\s|$)"
 
     match = re.search(pattern, model_output, re.IGNORECASE)
     if match:
